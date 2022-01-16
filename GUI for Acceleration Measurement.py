@@ -7,6 +7,9 @@ import time
 
 
 def Start():
+    cnt = 0 
+    stop.set(False)
+
     get_g = g_entry.get()
 
     if (float(get_g) > 10.0):
@@ -26,40 +29,46 @@ def Start():
         r_dir = str(1)
 
     
-    
-    BLE(get_g, r_dir, m_time, s_f)
-    time.sleep(2)
+    while cnt < 3 and stop.get() == False:
+        BLE(get_g, r_dir, m_time, s_f)
+        time.sleep(2)
 
-    print('Starting')
-    Current_time = time.time()
-    Start_time = time.time()
-    Print_time = Start_time
-
-    while Current_time - Start_time <= float(m_time) and stop.get() == False:
-        root.update()
-
+        print('Starting')
         Current_time = time.time()
+        Start_time = time.time()
+        Print_time = Start_time
 
-        if Current_time - Print_time > 1:
+    
+        while Current_time - Start_time <= float(m_time) + 1.0 and stop.get() == False:
+            root.update()
+
+            Current_time = time.time()
+
+            if Current_time - Print_time > 1:
+                print(Current_time - Start_time)
+                Print_time = time.time()
+        # print(path)
+        # print(get_g)
+            #print(type(get_g))
+        # print(m_time)
+        # Save(path, T_B_R_L)
+
+        cnt += 1 
+        time.sleep(0.5) 
+            
+        if stop.get():
+            print(Current_time - Start_time) 
+            #print('Stopped')
+            #stop.set(False)
+            get_g = r_dir = m_time = s_f = '0'
+            BLE_Stop(s_f)
+        else:
             print(Current_time - Start_time)
-            Print_time = time.time()
-       # print(path)
-       # print(get_g)
-        #print(type(get_g))
-       # print(m_time)
-       # Save(path, T_B_R_L)
-
-        
-        
-    if stop.get():
-        print(Current_time - Start_time) 
-        print('Stoped')
-        stop.set(False)
-        get_g = r_dir = m_time = s_f = '0'
-        BLE_Stop(s_f)
-    else:
-        print(Current_time - Start_time)
+            print(cnt)
+    if cnt == 3:
         print('Done')
+    else:
+        print('Stopped')
 
 def Reset():
     g_entry.delete(0, END)
