@@ -4,7 +4,7 @@ from tkinter import messagebox #import messagebox library
 from bluepy import btle
 import time
 
-
+Counter = 3
 
 def Start():
     cnt = 0 
@@ -29,7 +29,7 @@ def Start():
         r_dir = str(1)
 
     
-    while cnt < 3 and stop.get() == False:
+    while cnt < Counter and stop.get() == False:
         BLE(get_g, r_dir, m_time, s_f)
         time.sleep(2)
 
@@ -65,7 +65,7 @@ def Start():
         else:
             print(Current_time - Start_time)
             print(cnt)
-    if cnt == 3:
+    if cnt == Counter:
         print('Done')
     else:
         print('Stopped')
