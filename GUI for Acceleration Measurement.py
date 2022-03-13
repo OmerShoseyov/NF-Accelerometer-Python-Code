@@ -4,7 +4,7 @@ from tkinter import messagebox #import messagebox library
 from bluepy import btle
 import time
 
-Counter = 3
+Counter = 1
 
 def Start():
     cnt = 0 
