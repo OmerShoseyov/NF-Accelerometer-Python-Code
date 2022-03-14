@@ -3,8 +3,11 @@ from tkinter import filedialog
 from tkinter import messagebox #import messagebox library
 from bluepy import btle
 import time
+import serial
 
 Counter = 1
+
+nanoSerial = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 
 def Start():
     cnt = 0 
@@ -52,7 +55,10 @@ def Start():
             #print(type(get_g))
         # print(m_time)
         # Save(path, T_B_R_L)
+            send_g_range(get_g)
+            print(get_IMU_data())
 
+        stop_IMU()
         cnt += 1 
         time.sleep(0.5) 
             
@@ -61,6 +67,7 @@ def Start():
             #print('Stopped')
             #stop.set(False)
             get_g = r_dir = m_time = s_f = '0'
+            stop_IMU()
             BLE_Stop(s_f)
         else:
             print(Current_time - Start_time)
@@ -202,6 +209,30 @@ def BLE_Stop(s_f):
         s_f = '0'.encode()
         Start_Finish_Characteristic.write(s_f, True)
         Odrive_Arduino.disconnect()
+
+def send_g_range(get_g):
+    g_float = float(get_g)
+    if g_float > 0.0 and g_float <= 2.0:
+        g = '2'
+        nanoSerial.write(str.encode(g + '\n'))
+    elif g_float > 2.0 and g_float <= 4.0:
+        g = '4'
+        nanoSerial.write(str.encode(g + '\n'))
+    elif g_float > 4.0 and g_float <= 8.0:
+        g = '8'
+        nanoSerial.write(str.encode(g + '\n'))
+    else:
+        g = '16'
+        nanoSerial.write(str.encode(g + '\n'))
+    
+
+def get_IMU_data():
+    read = nanoSerial.readline().decode()
+    
+    return read
+
+def stop_IMU():
+    nanoSerial.write(str.encode('0' + '\n'))
 
 def Save_Directory():
     global path
