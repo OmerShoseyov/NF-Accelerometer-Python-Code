@@ -5,7 +5,7 @@ from bluepy import btle
 import time
 import serial
 
-Counter = 1
+Counter = 3
 
 nanoSerial = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 
