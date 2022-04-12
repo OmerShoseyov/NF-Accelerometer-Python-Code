@@ -20,6 +20,7 @@ try:
 
     sleep(10)
     display.lcd_clear()
+    sleep(2)
 
 except KeyboardInterrupt:
     display.lcd_clear()

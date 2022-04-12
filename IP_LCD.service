@@ -1,0 +1,14 @@
+[Unit]
+Description= Show IP on LCD every 10 seconds
+After=network-online.target
+
+[Service]
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/NF-Accelerometer Code/NF-Accelerometer-Python-Code/IP_LCD.py
+Type=idle
+Restart=always
+RestartSec=0
+
+[Install]
+WantedBy=multi-user.target
+
