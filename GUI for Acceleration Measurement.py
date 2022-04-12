@@ -5,9 +5,10 @@ from bluepy import btle
 import time
 import serial
 
-Counter = 3
+Counter = 6
 
-nanoSerial = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
+# mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
+measurement_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 
 def Start():
     cnt = 0 
@@ -33,8 +34,11 @@ def Start():
 
     
     while cnt < Counter and stop.get() == False:
-        BLE(get_g, r_dir, m_time, s_f)
+        # BLE(get_g, r_dir, m_time, s_f)
         time.sleep(2)
+        dir = 'CCW' if r_dir =='1' else "CW"
+        filename = 'leg_number: ' + str(cnt) + ', Direction is: '+ dir + ' chip sie: ' + tbrl_to_string(T_B_R_L)+ '.txt'
+        new_file = open(filename, 'w')
 
         print('Starting')
         Current_time = time.time()
@@ -52,13 +56,15 @@ def Start():
                 Print_time = time.time()
         # print(path)
         # print(get_g)
-            #print(type(get_g))
+        #print(type(get_g))
         # print(m_time)
         # Save(path, T_B_R_L)
-            send_g_range(get_g)
-            print(get_IMU_data())
+            # send_g_range(get_g)
+            apply_voltage_and_measure(float(m_time), cnt, new_file)
+            
+            # print(get_IMU_data()) #We will save it in our file instead of printing
 
-        stop_IMU()
+        # stop_IMU()
         cnt += 1 
         time.sleep(0.5) 
             
@@ -67,8 +73,8 @@ def Start():
             #print('Stopped')
             #stop.set(False)
             get_g = r_dir = m_time = s_f = '0'
-            stop_IMU()
-            BLE_Stop(s_f)
+            # stop_IMU()
+            # BLE_Stop(s_f)
         else:
             print(Current_time - Start_time)
             print(cnt)
@@ -76,6 +82,19 @@ def Start():
         print('Done')
     else:
         print('Stopped')
+
+
+def apply_voltage_and_measure(time_counter, i, filename):
+    measurement_arduino.reset_input_buffer()
+    start_time = time.time()
+    while (time.time() - start_time) < time_counter:
+        num_to_send = str(i+1)
+        send_pin_num_to_light(num_to_send)
+        line = get_data()
+        print('i = '+ str(i) +', current is ' + line)
+        print(15*'*')
+        save_data(filename, time.time() - start_time, line)
+
 
 def Reset():
     g_entry.delete(0, END)
@@ -214,25 +233,25 @@ def send_g_range(get_g):
     g_float = float(get_g)
     if g_float > 0.0 and g_float <= 2.0:
         g = '2'
-        nanoSerial.write(str.encode(g + '\n'))
+        mems_arduino.write(str.encode(g + '\n'))
     elif g_float > 2.0 and g_float <= 4.0:
         g = '4'
-        nanoSerial.write(str.encode(g + '\n'))
+        mems_arduino.write(str.encode(g + '\n'))
     elif g_float > 4.0 and g_float <= 8.0:
         g = '8'
-        nanoSerial.write(str.encode(g + '\n'))
+        mems_arduino.write(str.encode(g + '\n'))
     else:
         g = '16'
-        nanoSerial.write(str.encode(g + '\n'))
+        mems_arduino.write(str.encode(g + '\n'))
     
 
 def get_IMU_data():
-    read = nanoSerial.readline().decode()
+    read = mems_arduino.readline().decode()
     
     return read
 
 def stop_IMU():
-    nanoSerial.write(str.encode('0' + '\n'))
+    mems_arduino.write(str.encode('0' + '\n'))
 
 def Save_Directory():
     global path
@@ -253,7 +272,34 @@ def Save(path, tbrl):
         tbrl = 'L'
 
     print(tbrl)
+
+def tbrl_to_string(tbrl):
+
+    if   tbrl == 0: return 'T'
+    elif tbrl == 1: return 'B'
+    elif tbrl == 2: return 'R'
+    elif tbrl == 3: return 'L'
     
+
+def save_data(file_name, time, current, x_mems="1", y_mems="1", z_mems="1"):
+    # Saves the data from the accelerometer and the MEMS to 'filename'
+    # data_to_save = 'time: ' + str(time) + ', current: ' + str(current) + ', x_mems: ' + str(x_mems) + ', y_mems: ' + str(y_mems) + ', z_mems: ' + str(z_mems)
+    # data_to_save = str(time) + ', The current is: ' + str(current) 
+    data_to_save = "At time: " + str(time) + ' The current is: ' + str(current) + ' x_mems: ' + str(x_mems) + ' y_mems: ' + str(y_mems) + ' z_mems: ' + str(z_mems)
+    file_name.write(data_to_save)
+
+
+def send_pin_num_to_light(number_str):
+    #sends to the arduino what 'leg' to put voltage
+    measurement_arduino.write(str.encode(number_str + '\n'))
+
+
+def get_data():
+    line = measurement_arduino.readline().decode()
+    return line
+
+
+
 
 root = Tk()
 root.title('Acceleration Measurement')
@@ -271,8 +317,8 @@ direction = ['CW', 'CCW']
 TBRL = ['T', 'B', 'R', 'L']
 
 Rocket_Image = PhotoImage('Rocket.png')
-CW_Image = PhotoImage(file='CW.png')
-CCW_Image = PhotoImage(file='CCW.png')
+CW_Image = PhotoImage(file='/home/pi/vscode/NF-Accelerometer-Python-Code/CW.png')
+CCW_Image = PhotoImage(file='/home/pi/vscode/NF-Accelerometer-Python-Code/CCW.png')
 DirectionImages = [CW_Image,CCW_Image]
 
 root.grid_columnconfigure(1, weight=1)
