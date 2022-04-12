@@ -4,77 +4,46 @@ from tkinter import messagebox #import messagebox library
 from bluepy import btle
 import time
 import serial
+import csv
 
+global first_measurement
+first_measurement = 1
 Counter = 6
-
-# mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
-measurement_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
+mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
+measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
 def Start():
     cnt = 0 
-    stop.set(False)
-
-    get_g = g_entry.get()
-
-    if (float(get_g) > 10.0):
-        messagebox.showwarning(title='WARNING!',message='MAX g is 10')
-        return
-
-    r_dir = x.get()
-    m_time = M_time_entry.get()
+    path, get_g, r_dir, time_from_user, T_B_R_L = get_data_from_user()
     s_f = '1'
 
-    T_B_R_L = y.get()
-    
-    
-    if r_dir == 0:
-        r_dir = str(-1)
-    else:
-        r_dir = str(1)
-
-    
     while cnt < Counter and stop.get() == False:
-        # BLE(get_g, r_dir, m_time, s_f)
+        BLE(get_g, r_dir, time_from_user, s_f)
         time.sleep(2)
-        dir = 'CCW' if r_dir =='1' else "CW"
-        filename = 'leg_number: ' + str(cnt) + ', Direction is: '+ dir + ' chip sie: ' + tbrl_to_string(T_B_R_L)+ '.txt'
-        new_file = open(filename, 'w')
-
+        txt_file, csv_file = create_files(path, cnt, r_dir, T_B_R_L)
         print('Starting')
-        Current_time = time.time()
-        Start_time = time.time()
-        Print_time = Start_time
 
-    
-        while Current_time - Start_time <= float(m_time) + 1.0 and stop.get() == False:
+        Print_time = Current_time = Start_time = time.time()    
+        while Current_time - Start_time <= float(time_from_user) and stop.get() == False:
             root.update()
-
             Current_time = time.time()
-
-            if Current_time - Print_time > 1:
-                print(Current_time - Start_time)
-                Print_time = time.time()
-        # print(path)
-        # print(get_g)
-        #print(type(get_g))
-        # print(m_time)
-        # Save(path, T_B_R_L)
-            # send_g_range(get_g)
-            apply_voltage_and_measure(float(m_time), cnt, new_file)
-            
-            # print(get_IMU_data()) #We will save it in our file instead of printing
-
-        # stop_IMU()
+            # if Current_time - Print_time > 1: # This 1 should be a parameter? 
+            #     print(Current_time - Start_time)
+            #     Print_time = time.time()
+            send_g_range(get_g)
+            apply_voltage_and_measure(Current_time-Start_time, cnt, txt_file, csv_file)
         cnt += 1 
+        stop_IMU()
+        
         time.sleep(0.5) 
             
         if stop.get():
             print(Current_time - Start_time) 
             #print('Stopped')
-            #stop.set(False)
-            get_g = r_dir = m_time = s_f = '0'
-            # stop_IMU()
-            # BLE_Stop(s_f)
+            stop.set(False)
+            get_g = r_dir = time_from_user = s_f = '0'
+            stop_IMU()
+            BLE_Stop(s_f)
         else:
             print(Current_time - Start_time)
             print(cnt)
@@ -83,17 +52,41 @@ def Start():
     else:
         print('Stopped')
 
+def get_data_from_user():
+    path = Save_Directory()
+    stop.set(False)
+    get_g = g_entry.get()
+    if (float(get_g) > 10.0):
+        messagebox.showwarning(title='WARNING!',message='MAX g is 10')
+        return
+    r_dir = x.get()
+    time_from_user = M_time_entry.get()
+    s_f = '1'
+    T_B_R_L = y.get()
+    if r_dir == 0:
+        r_dir = str(-1)
+    else:
+        r_dir = str(1)
+    return path,get_g,r_dir,time_from_user,T_B_R_L
 
-def apply_voltage_and_measure(time_counter, i, filename):
+def create_files(path, cnt, r_dir, T_B_R_L):
+    dir = 'CCW' if r_dir =='1' else "CW"
+    filename = 'leg: ' + str(cnt) + ', dir: '+ dir + ' side: ' + tbrl_to_string(T_B_R_L)
+    txt_file = open(path+'/'+filename+ '.txt', 'w')
+    csv_file = open(path+'/'+filename+ '.csv', 'w')
+    return txt_file,csv_file
+
+
+def apply_voltage_and_measure(current_time, i, txt_file, csv_file):
     measurement_arduino.reset_input_buffer()
-    start_time = time.time()
-    while (time.time() - start_time) < time_counter:
-        num_to_send = str(i+1)
-        send_pin_num_to_light(num_to_send)
-        line = get_data()
-        print('i = '+ str(i) +', current is ' + line)
-        print(15*'*')
-        save_data(filename, time.time() - start_time, line)
+    num_to_send = str(i+1)
+    send_pin_num_to_light(num_to_send)
+    line = get_data()
+    print('i = '+ str(i) +', current is ' + line)
+    print(15*'*')
+    [xmems, ymems, zmems] = get_IMU_data().split()
+    save_data(txt_file, current_time, line, xmems, ymems, zmems)
+    save_csv_data(csv_file,current_time, line, xmems, ymems, zmems)
 
 
 def Reset():
@@ -257,7 +250,7 @@ def Save_Directory():
     global path
     path = filedialog.askdirectory(initialdir="/home/pi/Acceleration Measurements", title="Select file")
     save_str.set(path)
-    #print(path) 
+    return path 
   
 
 def Save(path, tbrl):
@@ -281,12 +274,23 @@ def tbrl_to_string(tbrl):
     elif tbrl == 3: return 'L'
     
 
-def save_data(file_name, time, current, x_mems="1", y_mems="1", z_mems="1"):
+def save_data(txt_file, time, current, x_mems="1", y_mems="1", z_mems="1"):
     # Saves the data from the accelerometer and the MEMS to 'filename'
     # data_to_save = 'time: ' + str(time) + ', current: ' + str(current) + ', x_mems: ' + str(x_mems) + ', y_mems: ' + str(y_mems) + ', z_mems: ' + str(z_mems)
     # data_to_save = str(time) + ', The current is: ' + str(current) 
-    data_to_save = "At time: " + str(time) + ' The current is: ' + str(current) + ' x_mems: ' + str(x_mems) + ' y_mems: ' + str(y_mems) + ' z_mems: ' + str(z_mems)
-    file_name.write(data_to_save)
+    current = str(current)
+    first_data = ", time: " + str(time) + ', current: ' + current  #+ 'in same line although the mems cant do this whyyy'
+    second_data = 'x_mems: ' + str(x_mems) + ', y_mems: ' + str(y_mems) + ', z_mems: ' + str(z_mems)
+    data_to_write = second_data +first_data  + '\n'
+    txt_file.write(data_to_write)
+
+def save_csv_data(file_name, time, current, x_mems="1", y_mems="1", z_mems="1"):
+    writer = csv.writer(file_name)
+    # print(current)
+    # a = current.strip()
+    # int_curr = int(current)
+    fin_curr = str(current).strip('\n \r \\" ')
+    writer.writerow([x_mems, y_mems, z_mems, time, fin_curr])
 
 
 def send_pin_num_to_light(number_str):
@@ -317,8 +321,8 @@ direction = ['CW', 'CCW']
 TBRL = ['T', 'B', 'R', 'L']
 
 Rocket_Image = PhotoImage('Rocket.png')
-CW_Image = PhotoImage(file='/home/pi/vscode/NF-Accelerometer-Python-Code/CW.png')
-CCW_Image = PhotoImage(file='/home/pi/vscode/NF-Accelerometer-Python-Code/CCW.png')
+CW_Image = PhotoImage(file='/home/pi/NF-Accelerometer Code/NF-Accelerometer-Python-Code/CW.png')
+CCW_Image = PhotoImage(file='/home/pi/NF-Accelerometer Code/NF-Accelerometer-Python-Code/CCW.png')
 DirectionImages = [CW_Image,CCW_Image]
 
 root.grid_columnconfigure(1, weight=1)
