@@ -18,6 +18,19 @@ def Start():
     s_f = '1'
 
     while cnt < Counter and stop.get() == False:
+        if cnt == 0:
+            r_dir = '1'
+        if cnt == 1:
+            r_dir = '-1'
+        if cnt == 2:
+            r_dir = '1'
+        if cnt == 3:
+            r_dir = '-1'
+        if cnt == 4:
+            r_dir = '1'
+        if cnt == 5:
+            r_dir = '-1'
+            
         BLE(get_g, r_dir, time_from_user, s_f)
         time.sleep(2)
         txt_file, csv_file = create_files(path, cnt, r_dir, T_B_R_L)
@@ -31,7 +44,7 @@ def Start():
             #     print(Current_time - Start_time)
             #     Print_time = time.time()
             send_g_range(get_g)
-            apply_voltage_and_measure(Current_time-Start_time, cnt, txt_file, csv_file)
+            switch_mux_selector(Current_time-Start_time, cnt, txt_file, csv_file)
         cnt += 1 
         stop_IMU()
         
@@ -77,16 +90,18 @@ def create_files(path, cnt, r_dir, T_B_R_L):
     return txt_file,csv_file
 
 
-def apply_voltage_and_measure(current_time, i, txt_file, csv_file):
+def switch_mux_selector(current_time, i, txt_file, csv_file):
     measurement_arduino.reset_input_buffer()
     num_to_send = str(i+1)
     send_pin_num_to_light(num_to_send)
-    line = get_data()
-    print('i = '+ str(i) +', current is ' + line)
-    print(15*'*')
+
+
+    # line = get_data()
+    # print('i = '+ str(i) +', current is ' + line)
+    # print(15*'*')
     [xmems, ymems, zmems] = get_IMU_data().split()
-    save_data(txt_file, current_time, line, xmems, ymems, zmems)
-    save_csv_data(csv_file,current_time, line, xmems, ymems, zmems)
+    save_data(txt_file, current_time, xmems, ymems, zmems)
+    save_csv_data(csv_file,current_time, xmems, ymems, zmems)
 
 
 def Reset():
@@ -274,23 +289,23 @@ def tbrl_to_string(tbrl):
     elif tbrl == 3: return 'L'
     
 
-def save_data(txt_file, time, current, x_mems="1", y_mems="1", z_mems="1"):
+def save_data(txt_file, time,  x_mems="1", y_mems="1", z_mems="1"):
     # Saves the data from the accelerometer and the MEMS to 'filename'
     # data_to_save = 'time: ' + str(time) + ', current: ' + str(current) + ', x_mems: ' + str(x_mems) + ', y_mems: ' + str(y_mems) + ', z_mems: ' + str(z_mems)
     # data_to_save = str(time) + ', The current is: ' + str(current) 
-    current = str(current)
-    first_data = ", time: " + str(time) + ', current: ' + current  #+ 'in same line although the mems cant do this whyyy'
+    # current = str(current)
+    first_data = ", time: " + str(time)  
     second_data = 'x_mems: ' + str(x_mems) + ', y_mems: ' + str(y_mems) + ', z_mems: ' + str(z_mems)
     data_to_write = second_data +first_data  + '\n'
     txt_file.write(data_to_write)
 
-def save_csv_data(file_name, time, current, x_mems="1", y_mems="1", z_mems="1"):
+def save_csv_data(file_name, time, x_mems="1", y_mems="1", z_mems="1"):
     writer = csv.writer(file_name)
     # print(current)
     # a = current.strip()
     # int_curr = int(current)
-    fin_curr = str(current).strip('\n \r \\" ')
-    writer.writerow([x_mems, y_mems, z_mems, time, fin_curr])
+    # fin_curr = str(current).strip('\n \r \\" ')
+    writer.writerow([x_mems, y_mems, z_mems, time])
 
 
 def send_pin_num_to_light(number_str):
