@@ -14,6 +14,7 @@ measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
 def Start():
     cnt = 0 
+    send_pin_num_to_light('0')
     path, get_g, r_dir, time_from_user, T_B_R_L = get_data_from_user()
     s_f = '1'
 
@@ -47,21 +48,26 @@ def Start():
             switch_mux_selector(Current_time-Start_time, cnt, txt_file, csv_file)
         cnt += 1 
         stop_IMU()
-        
-        time.sleep(0.5) 
-            
+        time.sleep(0.5)             
+       
+         
         if stop.get():
             print(Current_time - Start_time) 
             #print('Stopped')
             stop.set(False)
             get_g = r_dir = time_from_user = s_f = '0'
             stop_IMU()
+            send_pin_num_to_light('0')
             BLE_Stop(s_f)
         else:
             print(Current_time - Start_time)
             print(cnt)
+            send_pin_num_to_light('0')
+
+
     if cnt == Counter:
         print('Done')
+        send_pin_num_to_light('0')
     else:
         print('Stopped')
 
