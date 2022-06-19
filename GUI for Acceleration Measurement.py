@@ -38,7 +38,7 @@ def Start():
         print('Starting')
 
         Print_time = Current_time = Start_time = time.time()    
-        while Current_time - Start_time <= float(time_from_user) and stop.get() == False:
+        while Current_time - Start_time <= (float(time_from_user) + 6.0) and stop.get() == False:
             root.update()
             Current_time = time.time()
             # if Current_time - Print_time > 1: # This 1 should be a parameter? 
@@ -154,6 +154,7 @@ def BLE(get_g, r_dir, m_time, s_f):
 
         Status = Status_Characteristic.read().decode()
         print(Status)
+        time.sleep(0.05)
 
         if Status == 'Ready':
             #print(get_g_byte)
@@ -172,9 +173,11 @@ def BLE(get_g, r_dir, m_time, s_f):
             #print(s_f)
             Start_Finish_Characteristic.write(s_f_byte, True)
             #print(s_f)
+            time.sleep(0.05)
             print(f'Start_Finish = {Start_Finish_Characteristic.read()}')
             
             Odrive_Arduino.disconnect()
+            time.sleep(0.05)
             print('-----Bye-----')
 
     except KeyboardInterrupt:
