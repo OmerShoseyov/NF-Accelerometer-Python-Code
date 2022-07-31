@@ -34,7 +34,7 @@ def Start():
             
         BLE(get_g, r_dir, time_from_user, s_f)
         time.sleep(2)
-        txt_file = create_files(path, cnt, r_dir, get_g, T_B_R_L)
+        csv_file = create_files(path, cnt, r_dir, get_g, T_B_R_L)
         print('Starting')
 
         Print_time = Current_time = Start_time = time.time()    
@@ -45,7 +45,7 @@ def Start():
             #     print(Current_time - Start_time)
             #     Print_time = time.time()
             send_g_range(get_g)
-            switch_mux_selector(Current_time-Start_time, cnt, txt_file)
+            switch_mux_selector(Current_time-Start_time, cnt, csv_file)
         cnt += 1 
         stop_IMU()
         time.sleep(0.5)             
@@ -91,12 +91,12 @@ def get_data_from_user():
 def create_files(path, cnt, r_dir, get_g, T_B_R_L):
     dir = 'CCW' if r_dir =='1' else "CW"
     filename = get_g + 'g_' + 'dir'+ dir + '_' + tbrl_to_string(T_B_R_L) + '_' + str(cnt + 1) 
-    txt_file = open(path+'/'+filename+ '.txt', 'w')
-    ##csv_file = open(path+'/'+filename+ '.csv', 'w')
-    return txt_file##,csv_file
+    #txt_file = open(path+'/'+filename+ '.txt', 'w')
+    csv_file = open(path+'/'+filename+ '.csv', 'w')
+    return csv_file #,txt_file
 
 
-def switch_mux_selector(current_time, i, txt_file):
+def switch_mux_selector(current_time, i, csv_file):
     measurement_arduino.reset_input_buffer()
     num_to_send = str(i+1)
     send_pin_num_to_light(num_to_send)
@@ -106,8 +106,8 @@ def switch_mux_selector(current_time, i, txt_file):
     # print('i = '+ str(i) +', current is ' + line)
     # print(15*'*')
     [xmems, ymems, zmems] = get_IMU_data().split()
-    save_data(txt_file, current_time, xmems, ymems, zmems)
-    ##save_csv_data(csv_file,current_time, xmems, ymems, zmems)
+    #save_data(txt_file, current_time, xmems, ymems, zmems)
+    save_csv_data(csv_file,current_time, xmems, ymems, zmems)
 
 
 def Reset():
