@@ -1,8 +1,13 @@
-a = 'start'
-print(type(a))
+""" import pyautogui 
+import time
 
-a = list('a')
-print(type(a))
+print(pyautogui.size())
+pyautogui.moveTo(224, 98)
+while True:
+    print(pyautogui.position())
+    time.sleep(0.5)   """    
 
-print('this is new!!!')
-
+file_name = 'test'
+Path = r'C:\Users\accel\OneDrive\Desktop\Omer\Test'
+index = 1
+print(Path + '\\' + file_name + '_' + str(index))   
