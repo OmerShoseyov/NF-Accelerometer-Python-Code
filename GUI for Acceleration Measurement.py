@@ -14,11 +14,20 @@ measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
 def Start():
     cnt = 0 
+    status_text.set('  Running  ')
+    status_led.configure(bg='green2')
+    count.set(str(cnt) + '/6')
+    root.update()
     send_pin_num_to_light('0')
-    path, get_g, r_dir, time_from_user, T_B_R_L = get_data_from_user()
+    get_g, r_dir, time_from_user, T_B_R_L = get_data_from_user()
+    #path = Save_Directory()
     s_f = '1'
+    stop.set(False)
 
     while cnt < Counter and stop.get() == False:
+        cnt += 1 
+        count.set(str(cnt) + '/6')
+        root.update()
         if cnt == 0:
             r_dir = '1'
         if cnt == 1:
@@ -46,10 +55,10 @@ def Start():
             #     Print_time = time.time()
             send_g_range(get_g)
             switch_mux_selector(Current_time-Start_time, cnt, csv_file)
-        cnt += 1 
+        
         stop_IMU()
         time.sleep(0.5)             
-       
+        root.update()
          
         if stop.get():
             print(Current_time - Start_time) 
@@ -68,11 +77,18 @@ def Start():
     if cnt == Counter:
         print('Done')
         send_pin_num_to_light('0')
+        stop.set(False)
+        status_text.set('  Waiting  ')
+        status_led.configure(bg='red')
+        count.set(str(0) + '/6')
+        root.update()
     else:
         print('Stopped')
+        status_text.set('  Waiting  ')
+        status_led.configure(bg='red')
+        root.update()
 
 def get_data_from_user():
-    path = Save_Directory()
     stop.set(False)
     get_g = g_entry.get()
     if (float(get_g) > 10.0):
@@ -86,11 +102,11 @@ def get_data_from_user():
         r_dir = str(-1)
     else:
         r_dir = str(1)
-    return path,get_g,r_dir,time_from_user,T_B_R_L
+    return get_g,r_dir,time_from_user,T_B_R_L
 
 def create_files(path, cnt, r_dir, get_g, T_B_R_L):
     dir = 'CCW' if r_dir =='1' else "CW"
-    filename = get_g + 'g_' + 'dir'+ dir + '_' + tbrl_to_string(T_B_R_L) + '_' + str(cnt + 1) 
+    filename = str(cnt + 1) + '_' +get_g + 'g_' + 'dir'+ dir + '_' + tbrl_to_string(T_B_R_L)  
     #txt_file = open(path+'/'+filename+ '.txt', 'w')
     csv_file = open(path+'/'+filename+ '.csv', 'w')
     return csv_file #,txt_file
@@ -340,6 +356,10 @@ y = IntVar()
 save_str = StringVar()
 stop = BooleanVar()
 stop.set(False)
+status_text = StringVar()
+status_text.set('  Waiting  ')
+count = StringVar()
+count.set(str(0) + '/6')
 
 direction = ['CW', 'CCW']
 TBRL = ['T', 'B', 'R', 'L']
@@ -359,6 +379,8 @@ f4 = Frame(root, bd=5)
 f5 = Frame(root, bd=5)
 f6 = Frame(root, bd=5)
 f7 = Frame(root, bd=5)
+f8 = Frame(root, bd=5, relief=RAISED)
+f9 = Frame(root, bd=5)
 
 f1.grid(row=0, columnspan=2, sticky=N)
 f2.grid(row=1, column=0, sticky=NW)
@@ -367,6 +389,8 @@ f4.grid(row=1, column=1, rowspan=2, sticky=NW)
 f5.grid(row=3, column=0, columnspan=2, sticky=EW)
 f6.grid(row=4, column=0, columnspan=2, sticky=EW)
 f7.grid(row=5, column=0, columnspan=2, sticky=EW)
+f8.grid(row=1, column=1)
+f9.grid(row=2, column=1)
 
 #### frame 1
 headr = Label(f1, text='Acceleration Measurement', font=("Ariel 30 bold underline")).pack()
@@ -383,23 +407,23 @@ M_time_entry = Entry(f3, width=4, font=("Ariel 18"), justify="right")
 M_time_entry.pack(side=LEFT, padx=2, pady=5)
 M_time_units_label = Label(f3, text='[sec]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
 
-#### frame 4
-Rotation_direction_label = Label(f4, text='Rotation Direction:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
+# #### frame 4
+# Rotation_direction_label = Label(f4, text='Rotation Direction:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 
-for index in range(len(direction)):
-    radiobutton = Radiobutton(f4,
-                              text=direction[index], #adds text to radio buttons
-                              variable=x, #groups radiobuttons together if they share the same variable
-                              value=index, #assigns each radiobutton a different value
-                              padx = 2, #adds padding on x-axis
-                              font=("Ariel 18 bold"),
-                              image = DirectionImages[index], #adds image to radiobutton
-                              compound = 'left', #adds image & text (left-side)
-                              indicatoron=0, #eliminate circle indicators
-                              width = 200, #sets width of radio buttons
-                              #command=order #set command of radiobutton to function
-                              )
-    radiobutton.pack(anchor=CENTER, padx=2, pady=5)
+# for index in range(len(direction)):
+#     radiobutton = Radiobutton(f4,
+#                               text=direction[index], #adds text to radio buttons
+#                               variable=x, #groups radiobuttons together if they share the same variable
+#                               value=index, #assigns each radiobutton a different value
+#                               padx = 2, #adds padding on x-axis
+#                               font=("Ariel 18 bold"),
+#                               image = DirectionImages[index], #adds image to radiobutton
+#                               compound = 'left', #adds image & text (left-side)
+#                               indicatoron=0, #eliminate circle indicators
+#                               width = 200, #sets width of radio buttons
+#                               #command=order #set command of radiobutton to function
+#                               )
+#     radiobutton.pack(anchor=CENTER, padx=2, pady=5)
 
 
 
@@ -445,6 +469,13 @@ start_button = Button(f7, text="Start", font=("Ariel 18 bold"), width=12, height
 reset_button = Button(f7, text="Reset", font=("Ariel 18 bold"), width=12, height=2, command=Reset, activebackground='yellow').grid(row=0, column=1, padx=2, sticky=EW)#pack(side=TOP)
 stop_button = Button(f7, text="Stop", font=("Ariel 18 bold"), width=12, height=2, command=Stop, activebackground='red').grid(row=0, column=2, padx=2,sticky=E)#pack(side=RIGHT)
 
+#### frame 8
+status_led = Label(f8, textvariable=status_text, font=("Ariel 40 bold"), bg='red')
+status_led.pack(anchor=E)
+
+#### frame 
+Count = Label(f9, textvariable=count, font=("Ariel 40 bold"))
+Count.pack(anchor=E)
 
 
 root.mainloop()
