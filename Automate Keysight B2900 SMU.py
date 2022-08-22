@@ -53,6 +53,7 @@ def Start():
                 pyautogui.moveTo(x, y)
                 pyautogui.click() 
                 cnt = 0
+                print(index)
 
         if triger == 0:
             if cnt == 1:
@@ -75,7 +76,7 @@ def Start():
                 pyautogui.press('enter')
 
                 index += 1
-
+                
                 ###Move to plot window###
                 x, y = pyautogui.locateCenterOnScreen('Graph.PNG', confidence=0.75)
                 pyautogui.moveTo(x, y)
