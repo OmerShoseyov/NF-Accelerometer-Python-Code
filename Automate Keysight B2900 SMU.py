@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox #import messagebox library
 
-Arduino_Port = 'COM4'
+Arduino_Port = 'COM5'
 arduino_triger = serial.Serial(Arduino_Port, 115200, timeout=0.1) # Arduino Serial port configuration
 
 def Start():
@@ -153,7 +153,7 @@ f4 = Frame(root, bd=5)
 f5 = Frame(root, bd=5)
 f6 = Frame(root, bd=5)
 f7 = Frame(root, bd=5)
-f8  =Frame(root, bd=5, relief=RAISED)
+f8 = Frame(root, bd=5, relief=RAISED)
 
 f1.grid(row=0, columnspan=2, sticky=N)
 f2.grid(row=1, column=0, sticky=NW)
