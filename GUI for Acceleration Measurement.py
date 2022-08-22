@@ -24,9 +24,8 @@ def Start():
     s_f = '1'
     stop.set(False)
 
-    while cnt < Counter and stop.get() == False:
-        cnt += 1 
-        count.set(str(cnt) + '/6')
+    while cnt < Counter and stop.get() == False:     
+        count.set(str(cnt + 1) + '/6')
         root.update()
         if cnt == 0:
             r_dir = '1'
@@ -55,7 +54,7 @@ def Start():
             #     Print_time = time.time()
             send_g_range(get_g)
             switch_mux_selector(Current_time-Start_time, cnt, csv_file)
-        
+        cnt += 1 
         stop_IMU()
         time.sleep(0.5)             
         root.update()
