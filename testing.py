@@ -1,8 +1,5 @@
-def change_to_backslash(input):
-     return input.replace(r'/', '\\')
 
-         
+import pyautogui 
 
-path = r'C:/Users/accel/OneDrive/Desktop/Omer////'
-
-print(change_to_backslash(path))
+x, y = pyautogui.locateCenterOnScreen('Start Measurement.PNG', confidence=0.75)
+print(x, y)

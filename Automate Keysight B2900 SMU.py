@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox #import messagebox library
 
-Arduino_Port = 'COM5'
+Arduino_Port = 'COM4'
 arduino_triger = serial.Serial(Arduino_Port, 115200, timeout=0.1) # Arduino Serial port configuration
 
 def Start():
@@ -43,9 +43,9 @@ def Start():
             if cnt == 1:
                 #print('in1')
                 ###Start Measurement###
-                x, y = pyautogui.locateCenterOnScreen('Start Measurement.PNG', confidence=0.75)
+                #x, y = pyautogui.locateCenterOnScreen('Start Measurement.PNG', confidence=0.75) # x = 225 y = 97
                 #print(x, y)
-                pyautogui.moveTo(x, y)
+                pyautogui.moveTo(225, 97)
                 pyautogui.click()  
 
                 ###Move to plot window###
@@ -59,9 +59,9 @@ def Start():
             if cnt == 1:
                 #print('in0')
                 ###Stop Measurement###
-                x, y = pyautogui.locateCenterOnScreen('Stop Measurement.PNG', confidence=0.75)
+                #x, y = pyautogui.locateCenterOnScreen('Stop Measurement.PNG', confidence=0.75) # x = 225 y = 97
                 #print(x, y)
-                pyautogui.moveTo(x, y)
+                pyautogui.moveTo(225, 97)
                 pyautogui.click() 
 
                 ###Save Measurement###
