@@ -186,7 +186,7 @@ headr = Label(f1, text='Acceleration Measurement', font=("Ariel 30 bold underlin
 g_label = Label(f2, text='g:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 g_entry = Entry(f2, width=4, font=("Ariel 18"), justify="right")
 g_entry.pack(side=LEFT, padx=2, pady=5)
-g_units_label = Label(f2, text='g [m/s^2]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
+g_units_label = Label(f2, text='g [m/s\u00B2]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
 
 #### frame 3
 Chip_label = Label(f3, text='Chip Serial Number:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
@@ -195,7 +195,7 @@ Chip_entry.pack(side=LEFT, padx=2, pady=5)
 #M_time_units_label = Label(f3, text='[sec]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
 
 #### frame 4
-volt_label = Label(f4, text='volt:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
+volt_label = Label(f4, text='Volt:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 volt_entry = Entry(f4, width=4, font=("Ariel 18"), justify="right")
 volt_entry.pack(side=LEFT, padx=2, pady=5)
 volt_label = Label(f4, text='[V]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
@@ -243,14 +243,15 @@ for index in range(len(TBRL)):
 #### frame 6
 save_button = Button(f6, text="Where to save?", font=("Ariel 18 bold"), width=12, command=Save_Directory).pack(side=LEFT)
 save_label = Label(f6, text="",
-              font=('Arial 18'),
+              font=('Arial 14'),
               #fg='#00FF00',
               bg='white',
               relief=SUNKEN,
               bd=5,
               padx=2,
               pady=2,
-              width=35,
+              width=45,
+              anchor="e",
               #image=photo,
               #compound='bottom',
               textvariabl=save_str,
