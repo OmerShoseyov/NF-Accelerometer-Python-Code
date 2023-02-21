@@ -9,6 +9,7 @@ import csv
 global first_measurement
 first_measurement = 1
 Counter = 6
+i = 1
 mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
@@ -108,7 +109,7 @@ def get_data_from_user():
 
 def create_files(path, cnt, r_dir, get_g, T_B_R_L):
     dir = 'CCW' if r_dir =='1' else "CW"
-    filename = str(cnt + 1) + '_' +get_g + 'g_' + 'dir'+ dir + '_' + tbrl_to_string(T_B_R_L)  
+    filename = tbrl_to_string(T_B_R_L) + '_' + str(cnt + 1) + '_' +get_g + 'g_' + 'dir'+ dir  
     #txt_file = open(path+'/'+filename+ '.txt', 'w')
     csv_file = open(path+'/'+filename+ '.csv', 'w')
     return csv_file #,txt_file
@@ -302,7 +303,18 @@ def stop_IMU():
 
 def Save_Directory():
     global path
-    path = filedialog.askdirectory(initialdir="/home/pi/Acceleration Measurements", title="Select file")
+    global i
+    global last_path
+
+    if i == 1:
+        current_path = "/home/pi/Acceleration Measurements"
+        i += 1
+        last_path = 'aa'
+    else:
+        current_path = last_path
+
+    path = filedialog.askdirectory(initialdir=current_path, title="Select file")
+    last_path = path
     save_str.set(path)
     return path 
   
