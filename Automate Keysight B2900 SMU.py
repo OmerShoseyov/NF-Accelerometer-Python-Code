@@ -7,9 +7,12 @@ from tkinter import messagebox #import messagebox library
 
 Arduino_Port = 'COM4'
 arduino_triger = serial.Serial(Arduino_Port, 115200, timeout=0.1) # Arduino Serial port configuration
+counter = 6 
+i = 1
 
 def Start():
     root.update()
+    
     global x
     triger = 0
     cnt = 0
@@ -83,7 +86,7 @@ def Start():
                 pyautogui.click() 
                 cnt = 0
 
-        if index > 6:
+        if index > counter:
             stop.set(True)
         
         root.update()
@@ -105,7 +108,18 @@ def tbrl_to_string(tbrl):
 
 def Save_Directory():
     global path
-    path = filedialog.askdirectory(initialdir=r'C:\Users\accel\OneDrive\Desktop\Omer\Measurements', title="Select file")
+    global i
+    global last_path
+
+    if i == 1:
+        current_path = r'C:\Users\accel\OneDrive\Desktop\Omer\Measurements'
+        i += 1
+        last_path = 'aa'
+    else:
+        current_path = last_path
+        
+    path = filedialog.askdirectory(initialdir=current_path, title="Select file")
+    last_path = path
     save_str.set(path)
     return path 
 
