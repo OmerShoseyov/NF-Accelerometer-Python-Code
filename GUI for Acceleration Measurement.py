@@ -8,7 +8,8 @@ import csv
 
 global first_measurement
 first_measurement = 1
-Counter = 6
+Counter = 3
+i = 1
 mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
@@ -16,16 +17,16 @@ def Start():
     cnt = 0 
     status_text.set('  Running  ')
     status_led.configure(bg='green2')
-    count.set(str(cnt) + '/6')
+    count.set(str(cnt) + '/' + str(Counter))
     root.update()
     send_pin_num_to_light('0')
-    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L = get_data_from_user()
+    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name = get_data_from_user()
     #path = Save_Directory()
     s_f = '1'
     stop.set(False)
 
     while cnt < Counter and stop.get() == False:     
-        count.set(str(cnt + 1) + '/6')
+        count.set(str(cnt + 1) + '/' + str(Counter))
         root.update()
         if cnt == 0:
             r_dir = '1'
@@ -42,7 +43,7 @@ def Start():
             
         BLE(get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, s_f)
         time.sleep(2)
-        csv_file = create_files(path, cnt, r_dir, get_g, T_B_R_L)
+        csv_file = create_files(path, cnt, r_dir, get_g, T_B_R_L, Chip_name)
         print('Starting')
 
         send_g_range(get_g)
@@ -79,7 +80,7 @@ def Start():
         stop.set(False)
         status_text.set('  Waiting  ')
         status_led.configure(bg='red')
-        count.set(str(0) + '/6')
+        count.set(str(0) + '/' + str(Counter))
         root.update()
     else:
         print('Stopped')
@@ -90,6 +91,7 @@ def Start():
 def get_data_from_user():
     stop.set(False)
     get_g = g_entry.get()
+    Chip_name = Chip_entry.get()
     if (float(get_g) > 10.0):
         messagebox.showwarning(title='WARNING!',message='MAX g is 10')
         return
@@ -104,11 +106,11 @@ def get_data_from_user():
         r_dir = str(-1)
     else:
         r_dir = str(1)
-    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L
+    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name
 
-def create_files(path, cnt, r_dir, get_g, T_B_R_L):
+def create_files(path, cnt, r_dir, get_g, T_B_R_L, Chip_name):
     dir = 'CCW' if r_dir =='1' else "CW"
-    filename = str(cnt + 1) + '_' +get_g + 'g_' + 'dir'+ dir + '_' + tbrl_to_string(T_B_R_L)  
+    filename = Chip_name + '_' + tbrl_to_string(T_B_R_L) + '_' + str(cnt + 1) + '_' + get_g + 'g_' + 'dir'+ dir  
     #txt_file = open(path+'/'+filename+ '.txt', 'w')
     csv_file = open(path+'/'+filename+ '.csv', 'w')
     return csv_file #,txt_file
@@ -131,6 +133,10 @@ def switch_mux_selector(current_time, i, csv_file):
 def Reset():
     g_entry.delete(0, END)
     M_time_entry.delete(0,END)
+    Dwell_time_entry.delete(0,END)
+    Rise_time_entry.delete(0,END)
+    Fall_time_entry.delete(0,END)
+    Chip_entry.delete(0,END)
     
 
 def Stop():
@@ -302,7 +308,18 @@ def stop_IMU():
 
 def Save_Directory():
     global path
-    path = filedialog.askdirectory(initialdir="/home/pi/Acceleration Measurements", title="Select file")
+    global i
+    global last_path
+
+    if i == 1:
+        current_path = "/home/pi/Acceleration Measurements"
+        i += 1
+        last_path = 'aa'
+    else:
+        current_path = last_path
+
+    path = filedialog.askdirectory(initialdir=current_path, title="Select file")
+    last_path = path
     save_str.set(path)
     return path 
   
@@ -373,7 +390,7 @@ stop.set(False)
 status_text = StringVar()
 status_text.set('  Waiting  ')
 count = StringVar()
-count.set(str(0) + '/6')
+count.set(str(0) + '/' + str(Counter))
 
 direction = ['CW', 'CCW']
 TBRL = ['T', 'B', 'R', 'L']
@@ -410,7 +427,7 @@ f8.grid(row=6, column=1, columnspan=2, sticky=EW)
 f9.grid(row=7, column=1, columnspan=2, sticky=EW)
 f10.grid(row=1, column=1, columnspan=1)
 f11.grid(row=2, column=1, columnspan=1)
-#f12.grid(row=2, column=1)
+f12.grid(row=4, column=1, sticky=EW)
 
 #### frame 1
 headr = Label(f1, text='Acceleration Measurement', font=("Ariel 30 bold underline")).pack()
@@ -419,7 +436,7 @@ headr = Label(f1, text='Acceleration Measurement', font=("Ariel 30 bold underlin
 g_label = Label(f2, text='Desired g:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 g_entry = Entry(f2, width=4, font=("Ariel 18"), justify="right")
 g_entry.pack(side=LEFT, padx=2, pady=5)
-g_units_label = Label(f2, text='g [m/s^2]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
+g_units_label = Label(f2, text='g [m/s\u00B2]', font=("Ariel 18")).pack(side=LEFT, padx=2, pady=5)
 
 #### frame 3
 M_time_label = Label(f3, text='Measurement Duration:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
@@ -463,7 +480,9 @@ Fall_time_units_label = Label(f6, text='[sec]', font=("Ariel 18")).pack(side=LEF
 #                               )
 #     radiobutton.pack(anchor=CENTER, padx=2, pady=5)
 
-
+Chip_label = Label(f12, text='Chip Serial Number:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
+Chip_entry = Entry(f12, width=10, font=("Ariel 18"), justify="left")
+Chip_entry.pack(side=LEFT, padx=2, pady=5)
 
 #### frame 7
 Which_is_connected_label = Label(f7, text='Which side is connected:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
@@ -496,6 +515,7 @@ save_label = Label(f8, text="",
               padx=2,
               pady=2,
               width=50,
+              anchor="e",
               #image=photo,
               #compound='bottom',
               textvariabl=save_str,
