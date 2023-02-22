@@ -1,15 +1,58 @@
 from tkinter import *
 import time
 
+t = b = r = l = 0
 
 def T():
-    for i in range(len(names_T)):
-        vars_T[i].set(1)
+    global t
+    if t == 0:
+        for i in range(len(names_T)):
+            vars_T[i].set(1)
+            t = 1
+    else:
+        for i in range(len(names_T)):
+            vars_T[i].set(0)
+            t = 0
+
     root.update()
 
 def B():
-    for i in range(len(names_T)):
-        vars_T[i].set(0)
+    global b
+    if b == 0:
+        for i in range(len(names_B)):
+            vars_B[i].set(1)
+            b = 1
+    else:
+        for i in range(len(names_B)):
+            vars_B[i].set(0)
+            b = 0
+
+    root.update()
+
+def R():
+    global r
+    if r == 0:
+        for i in range(len(names_R)):
+            vars_R[i].set(1)
+            r = 1
+    else:
+        for i in range(len(names_R)):
+            vars_R[i].set(0)
+            r = 0
+
+    root.update()
+
+def L():
+    global l
+    if l == 0:
+        for i in range(len(names_L)):
+            vars_L[i].set(1)
+            l = 1
+    else:
+        for i in range(len(names_L)):
+            vars_L[i].set(0)
+            l = 0
+
     root.update()
 
 
@@ -60,10 +103,10 @@ for i, checkboxname in enumerate(names_L):
     check = Checkbutton(f3, text=checkboxname, variable=vars_L[i], font=('Ariel 14'))
     check.grid(row=i, column=0)#pack(side=TOP, padx=2, pady=2, expand=TRUE, anchor="e")
 
-T_button = Button(f1, text="T", font=("Ariel 12 bold"), width=6, height=1, command=T, activebackground='green').grid(row=1, column=0, columnspan=6)
-B_button = Button(f4, text="B", font=("Ariel 12 bold"), width=6, height=1, command=B, activebackground='green').grid(row=0, column=0, columnspan=6)
-R_button = Button(f2, text="R", font=("Ariel 12 bold"), width=2, height=3, command=T, activebackground='green').grid(row=0, rowspan=6, column=0)
-L_button = Button(f3, text="L", font=("Ariel 12 bold"), width=2, height=3, command=T, activebackground='green').grid(row=0, rowspan=6, column=1)
+T_button = Button(f1, text="T", font=("Ariel 12 bold"), width=5, height=1, command=T, activebackground='green').grid(row=1, column=0, columnspan=6)
+B_button = Button(f4, text="B", font=("Ariel 12 bold"), width=5, height=1, command=B, activebackground='green').grid(row=0, column=0, columnspan=6)
+R_button = Button(f2, text="R", font=("Ariel 12 bold"), width=1, height=3, command=R, activebackground='green').grid(row=0, rowspan=6, column=0)
+L_button = Button(f3, text="L", font=("Ariel 12 bold"), width=1, height=3, command=L, activebackground='green').grid(row=0, rowspan=6, column=1)
 
 """ while TRUE:
     if vars_T[0].get() == 1:
