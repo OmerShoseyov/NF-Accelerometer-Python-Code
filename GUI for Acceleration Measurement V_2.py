@@ -8,25 +8,31 @@ import csv
 
 global first_measurement
 first_measurement = 1
-Counter = 3
-i = 1
+Counter = 1
+repeat = 1 #add this option in the future
+s = 1
 t = b = r = l = 0
 mems_arduino = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 measurement_arduino = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
 
+
+
 def Start():
+    start.set(True)
     cnt = 0 
     status_text.set('  Running  ')
     status_led.configure(bg='green2')
-    count.set(str(cnt) + '/' + str(Counter))
-    root.update()
+
     send_pin_num_to_light('0')
-    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name = get_data_from_user()
+    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name, junctions = get_data_from_user()
+    Counter = len(junctions)
     #path = Save_Directory()
     s_f = '1'
     stop.set(False)
+    count.set(str(cnt) + '/' + str(Counter))
+    root.update()
 
-    while cnt < Counter and stop.get() == False:     
+    while cnt < Counter*repeat and stop.get() == False:     
         count.set(str(cnt + 1) + '/' + str(Counter))
         root.update()
         if cnt == 0:
@@ -44,7 +50,8 @@ def Start():
             
         BLE(get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, s_f)
         time.sleep(2)
-        csv_file = create_files(path, cnt, r_dir, get_g, T_B_R_L, Chip_name)
+        junction_name = junctions[cnt]
+        csv_file = create_files(path, r_dir, get_g, junction_name, Chip_name)
         print('Starting')
 
         send_g_range(get_g)
@@ -55,7 +62,7 @@ def Start():
             # if Current_time - Print_time > 1: # This 1 should be a parameter? 
             #     print(Current_time - Start_time)
             #     Print_time = time.time()
-            switch_mux_selector(Current_time-Start_time, cnt, csv_file)
+            switch_mux_selector(Current_time-Start_time, cnt, csv_file, junctions)
         cnt += 1 
         stop_IMU()
         time.sleep(0.5)             
@@ -64,7 +71,7 @@ def Start():
         if stop.get():
             print(Current_time - Start_time) 
             #print('Stopped')
-            stop.set(False)
+            stop.set(True)
             get_g = r_dir = time_from_user = s_f = '0'
             stop_IMU()
             send_pin_num_to_light('0')
@@ -75,19 +82,25 @@ def Start():
             send_pin_num_to_light('0')
 
 
-    if cnt == Counter:
+    if cnt == Counter*repeat:
         print('Done')
         send_pin_num_to_light('0')
         stop.set(False)
+        start.set(False)
         status_text.set('  Waiting  ')
         status_led.configure(bg='red')
         count.set(str(0) + '/' + str(Counter))
         root.update()
     else:
         print('Stopped')
+        send_pin_num_to_light('0')
+        stop.set(False)
+        start.set(False)
         status_text.set('  Waiting  ')
         status_led.configure(bg='red')
+        count.set(str(0) + '/' + str(Counter))
         root.update()
+
 
 def get_data_from_user():
     stop.set(False)
@@ -103,23 +116,49 @@ def get_data_from_user():
     fall_t = Fall_time_entry.get()
     s_f = '1'
     T_B_R_L = y.get()
+    junctions = Junctions()
     if r_dir == 0:
         r_dir = str(-1)
     else:
         r_dir = str(1)
-    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name
+    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name, junctions
 
-def create_files(path, cnt, r_dir, get_g, T_B_R_L, Chip_name):
+def Junctions():
+    junctions = []
+
+    for i in range(len(names_T)):
+        if vars_T[i].get() == 1:
+            junctions.append(names_T[i])
+
+    for i in range(len(names_T)):
+        if vars_B[i].get() == 1:
+            junctions.append(names_B[i])
+
+    for i in range(len(names_T)):
+        if vars_R[i].get() == 1:
+            junctions.append(names_R[i])
+    
+    for i in range(len(names_T)):
+        if vars_L[i].get() == 1:
+            junctions.append(names_L[i])
+
+    return junctions
+
+
+
+
+def create_files(path, r_dir, get_g, junction_name, Chip_name):
     dir = 'CCW' if r_dir =='1' else "CW"
-    filename = Chip_name + '_' + tbrl_to_string(T_B_R_L) + '_' + str(cnt + 1) + '_' + get_g + 'g_' + 'dir'+ dir  
+    filename = Chip_name + '_' + junction_name + '_' + get_g + 'g_' + 'dir'+ dir  
     #txt_file = open(path+'/'+filename+ '.txt', 'w')
     csv_file = open(path+'/'+filename+ '.csv', 'w')
     return csv_file #,txt_file
 
 
-def switch_mux_selector(current_time, i, csv_file):
+def switch_mux_selector(current_time, i, csv_file, junctions):
     measurement_arduino.reset_input_buffer()
-    num_to_send = str(i+1)
+    num_to_send = junctions[i].split('_')
+    num_to_send = num_to_send[len(num_to_send) - 1]
     send_pin_num_to_light(num_to_send)
 
 
@@ -369,12 +408,12 @@ def stop_IMU():
 
 def Save_Directory():
     global path
-    global i
+    global s
     global last_path
 
-    if i == 1:
+    if s == 1:
         current_path = "/home/pi/Acceleration Measurements"
-        i += 1
+        s += 1
         last_path = 'aa'
     else:
         current_path = last_path
@@ -448,6 +487,8 @@ y = IntVar()
 save_str = StringVar()
 stop = BooleanVar()
 stop.set(False)
+start = BooleanVar()
+start.set(False)
 status_text = StringVar()
 status_text.set('  Waiting  ')
 count = StringVar()
@@ -616,6 +657,7 @@ status_led.pack(anchor=E)
 Count = Label(f11, textvariable=count, font=("Ariel 40 bold"))
 Count.pack(fill="none", expand=True)
 
+#### frame 13
 for i, checkboxname in enumerate(names_T):
     vars_T.append(IntVar())
     check = Checkbutton(f14, text=checkboxname, variable=vars_T[i], font=('Ariel 14'))
@@ -641,5 +683,13 @@ B_button = Button(f17, text="B", font=("Ariel 12 bold"), width=5, height=1, comm
 R_button = Button(f15, text="R", font=("Ariel 12 bold"), width=1, height=3, command=R, activebackground='green').grid(row=0, rowspan=6, column=0)
 L_button = Button(f16, text="L", font=("Ariel 12 bold"), width=1, height=3, command=L, activebackground='green').grid(row=0, rowspan=6, column=1)
 
+while start.get() == False:
+    cnt = 0
+    junctions = Junctions()
+    Counter = len(junctions)
+    count.set(str(cnt) + '/' + str(Counter))
+
+    root.update() 
 
 root.mainloop()
+
