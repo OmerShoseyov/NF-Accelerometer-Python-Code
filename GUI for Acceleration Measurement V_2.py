@@ -149,7 +149,7 @@ def Junctions():
 
 def create_files(path, r_dir, get_g, junction_name, Chip_name):
     dir = 'CCW' if r_dir =='1' else "CW"
-    filename = Chip_name + '_' + junction_name + '_' + get_g + 'g_' + 'dir'+ dir  
+    filename = Chip_name + '_' + get_g + 'g_' + 'dir' + dir + '_' + junction_name 
     #txt_file = open(path+'/'+filename+ '.txt', 'w')
     csv_file = open(path+'/'+filename+ '.csv', 'w')
     return csv_file #,txt_file
@@ -683,12 +683,15 @@ B_button = Button(f17, text="B", font=("Ariel 12 bold"), width=5, height=1, comm
 R_button = Button(f15, text="R", font=("Ariel 12 bold"), width=1, height=3, command=R, activebackground='green').grid(row=0, rowspan=6, column=0)
 L_button = Button(f16, text="L", font=("Ariel 12 bold"), width=1, height=3, command=L, activebackground='green').grid(row=0, rowspan=6, column=1)
 
+def on_closing():
+     root.destroy()
+
 while start.get() == False:
     cnt = 0
     junctions = Junctions()
     Counter = len(junctions)
     count.set(str(cnt) + '/' + str(Counter))
-
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.update() 
 
 root.mainloop()
