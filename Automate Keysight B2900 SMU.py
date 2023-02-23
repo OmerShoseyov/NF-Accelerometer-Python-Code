@@ -22,6 +22,8 @@ def Start():
     count.set(str(index) + '/' + str(Counter))
     root.update()
 
+    start = time.time()
+
     while stop.get() == False:
         root.update()
         status_text.set('  Running  ')
@@ -32,6 +34,7 @@ def Start():
         get_g = g_entry.get()
         Chip_name = Chip_entry.get()
         volt = volt_entry.get()
+        it_iv = type_off_m.get()
         #T_B_R_L = side.get()
         file_name = Chip_name + '_' + get_g + 'g_' + volt + 'V_' 
         # print(file_name)
@@ -39,13 +42,15 @@ def Start():
         # time.sleep(0.5)
         if (float(get_g) > 10.0):
             messagebox.showwarning(title='WARNING!',message='MAX g is 10')
-            return
+            Stop()
+            
 
         if arduino_triger.inWaiting() > 0:
             #print('in3')
             triger = arduino_triger.readline().decode() 
             triger = int(triger)
             cnt = 1
+            
         
         if triger == 1:
             if cnt == 1:
@@ -55,22 +60,26 @@ def Start():
                 #print(x, y)
                 pyautogui.moveTo(225, 97)
                 pyautogui.click()  
-
+                print(time.time() - start)
                 ###Move to plot window###
                 x, y = pyautogui.locateCenterOnScreen('Graph.PNG', confidence=0.75)
                 pyautogui.moveTo(x, y)
                 pyautogui.click() 
                 cnt = 0
                 print(index)
+                print(time.time() - start)
 
         if triger == 0:
             if cnt == 1:
                 #print('in0')
-                ###Stop Measurement###
-                #x, y = pyautogui.locateCenterOnScreen('Stop Measurement.PNG', confidence=0.75) # x = 225 y = 97
-                #print(x, y)
-                pyautogui.moveTo(225, 97)
-                pyautogui.click() 
+                if it_iv == 0:
+                    ###Stop Measurement###
+                    #x, y = pyautogui.locateCenterOnScreen('Stop Measurement.PNG', confidence=0.75) # x = 225 y = 97
+                    #print(x, y)
+                    pyautogui.moveTo(225, 97)
+                    pyautogui.click() 
+
+                print(time.time() - start)
 
                 ###Save Measurement###
                 x, y = pyautogui.locateCenterOnScreen('Table.PNG', confidence=0.75)
@@ -117,7 +126,7 @@ def Save_Directory():
     global last_path
 
     if s == 1:
-        current_path = r'C:\Users\accel\OneDrive\Desktop\Omer\Measurements'
+        current_path = r'C:\Users\accel\OneDrive\Desktop\Omer'
         s += 1
         last_path = 'aa'
     else:
@@ -229,7 +238,7 @@ root.title('Acceleration Measurement')
 root.resizable(False, False)
 
 x = IntVar()
-y = IntVar()
+type_off_m = IntVar()
 save_str = StringVar()
 stop = BooleanVar()
 stop.set(False)
@@ -245,7 +254,7 @@ vars_R = []
 vars_L = []
 
 direction = ['CW', 'CCW']
-TBRL = ['T', 'B', 'R', 'L']
+IT_IV = ['I(t)', 'I(V)']
 names_T = ["T_1", "T_2", "T_3", "T_4", "T_5", "T_6"]
 names_B = ["B_1", "B_2", "B_3", "B_4", "B_5", "B_6"]
 names_R = ["R_1", "R_2", "R_3", "R_4", "R_5", "R_6"]
@@ -266,7 +275,7 @@ f3 = Frame(root, bd=5)
 f4 = Frame(root, bd=5)
 f5 = Frame(root, bd=5)
 f6 = Frame(root, bd=5)
-#f7 = Frame(root, bd=5)
+f7 = Frame(root, bd=5)
 f8 = Frame(root, bd=5)
 f9 = Frame(root, bd=5)
 f10 = Frame(root, bd=5, relief=RAISED)
@@ -286,13 +295,13 @@ f3.grid(row=2, column=0, sticky=NW)
 f4.grid(row=3, column=0, sticky=NW)
 f5.grid(row=4, column=0, sticky=NW)
 f6.grid(row=5, column=0, sticky=NW)
-#f7.grid(row=5, column=1, sticky=NW)
+f7.grid(row=4, column=0, sticky=NW)
 f8.grid(row=6, column=0, columnspan=2, sticky=EW)
 f9.grid(row=7, column=1, columnspan=2, sticky=EW)
 f10.grid(row=1, column=2, columnspan=1)
 f11.grid(row=2, column=2, columnspan=1)
 f12.grid(row=3, column=0, sticky=EW)
-f13.grid(row=1, rowspan=3, column=1, sticky=N)
+f13.grid(row=1, rowspan=4, column=1, sticky=N)
 f14.grid(row=0, columnspan=2, sticky=N)
 f15.grid(row=1, column=1, sticky=NE)
 f16.grid(row=1, column=0, sticky=NW)
@@ -355,12 +364,12 @@ Chip_entry = Entry(f12, width=10, font=("Ariel 18"), justify="left")
 Chip_entry.pack(side=LEFT, padx=2, pady=5)
 
 #### frame 7
-""" Which_is_connected_label = Label(f7, text='Which side is connected:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
+Which_is_connected_label = Label(f7, text='Type of measurement:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 
-for index in range(len(TBRL)):
+for index in range(len(IT_IV)):
     radiobutton = Radiobutton(f7,
-                              text=TBRL[index], #adds text to radio buttons
-                              variable=y, #groups radiobuttons together if they share the same variable
+                              text=IT_IV[index], #adds text to radio buttons
+                              variable=type_off_m, #groups radiobuttons together if they share the same variable
                               value=index, #assigns each radiobutton a different value
                               padx = 2, #adds padding on x-axis
                               font=("Ariel 18 bold"),
@@ -370,7 +379,7 @@ for index in range(len(TBRL)):
                               width = 10, #sets width of radio buttons
                               #command=order #set command of radiobutton to function
                               )
-    radiobutton.pack(side=LEFT, padx=2, pady=2, expand=TRUE) """
+    radiobutton.pack(side=LEFT, padx=2, pady=2, expand=TRUE)
 
 
 
