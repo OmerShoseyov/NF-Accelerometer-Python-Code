@@ -24,11 +24,11 @@ def Start():
     status_led.configure(bg='green2')
 
     send_pin_num_to_light('0')
-    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name, junctions = get_data_from_user()
+    stop.set(False)
+    get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, it_iv, Chip_name, junctions = get_data_from_user()
     Counter = len(junctions)
     #path = Save_Directory()
     s_f = '1'
-    stop.set(False)
     count.set(str(cnt) + '/' + str(Counter))
     root.update()
 
@@ -48,7 +48,7 @@ def Start():
         if cnt == 5:
             r_dir = '-1'
             
-        BLE(get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, s_f)
+        BLE(get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, it_iv, s_f)
         time.sleep(2)
         junction_name = junctions[cnt]
         csv_file = create_files(path, r_dir, get_g, junction_name, Chip_name)
@@ -108,20 +108,20 @@ def get_data_from_user():
     Chip_name = Chip_entry.get()
     if (float(get_g) > 10.0):
         messagebox.showwarning(title='WARNING!',message='MAX g is 10')
-        return
+        Stop()
     r_dir = x.get()
     time_from_user = M_time_entry.get()
     dwell_t = Dwell_time_entry.get()
     rise_t = Rise_time_entry.get()
     fall_t = Fall_time_entry.get()
     s_f = '1'
-    T_B_R_L = y.get()
+    it_iv = str(y.get())
     junctions = Junctions()
     if r_dir == 0:
         r_dir = str(-1)
     else:
         r_dir = str(1)
-    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, T_B_R_L, Chip_name, junctions
+    return get_g, r_dir, time_from_user, dwell_t, rise_t, fall_t, it_iv, Chip_name, junctions
 
 def Junctions():
     junctions = []
@@ -243,7 +243,7 @@ def L():
 
     root.update()
 
-def BLE(get_g, r_dir, m_time, dwt, rt, ft, s_f):
+def BLE(get_g, r_dir, m_time, dwt, rt, ft, it_iv, s_f):
 
     try:
         #Have to match with Peripheral
@@ -261,6 +261,7 @@ def BLE(get_g, r_dir, m_time, dwt, rt, ft, s_f):
         dwt_byte = dwt.encode()
         rt_byte = rt.encode()
         ft_byte = ft.encode()
+        it_iv_byte = it_iv.encode()
         s_f_byte = s_f.encode()
 
         Odrive_Arduino = btle.Peripheral(MAC)
@@ -278,9 +279,10 @@ def BLE(get_g, r_dir, m_time, dwt, rt, ft, s_f):
         Dwell_Time_Characteristic = Motor_Instructions_Characteristics[3]
         Rise_Time_Characteristic = Motor_Instructions_Characteristics[4]
         Fall_Time_Characteristic = Motor_Instructions_Characteristics[5]
-        Start_Finish_Characteristic = Motor_Instructions_Characteristics[6]
+        IT_IV_Characteristic = Motor_Instructions_Characteristics[6]
+        Start_Finish_Characteristic = Motor_Instructions_Characteristics[7]
         #print(Start_Finish_Characteristic)
-        Status_Characteristic = Motor_Instructions_Characteristics[7]
+        Status_Characteristic = Motor_Instructions_Characteristics[8]
 
         Status = Status_Characteristic.read().decode()
         print(Status)
@@ -307,6 +309,8 @@ def BLE(get_g, r_dir, m_time, dwt, rt, ft, s_f):
             print(f'Rise_Time = {Rise_Time_Characteristic.read()}')
             Fall_Time_Characteristic.write(ft_byte, True)
             print(f'Fall_Time = {Fall_Time_Characteristic.read()}')
+            IT_IV_Characteristic.write(it_iv_byte, True)
+            print(f'IT_IV = {IT_IV_Characteristic.read()}')
             Start_Finish_Characteristic.write(s_f_byte, True)
             #print(s_f)
             time.sleep(0.05)
@@ -348,7 +352,7 @@ def BLE_Stop(s_f):
         #print(Rotation_Direction_Characteristic)
         #Measurment_Time_Characteristic = Motor_Instructions_Characteristics[2]
         #print(Measurment_Time_Characteristic)
-        Start_Finish_Characteristic = Motor_Instructions_Characteristics[6]
+        Start_Finish_Characteristic = Motor_Instructions_Characteristics[7]
         #print(Start_Finish_Characteristic)
         #Status_Characteristic = Motor_Instructions_Characteristics[4]
 
@@ -499,7 +503,7 @@ vars_R = []
 vars_L = []
 
 direction = ['CW', 'CCW']
-TBRL = ['T', 'B', 'R', 'L']
+IT_IV = ['I(t)', 'I(V)']
 names_T = ["T_1", "T_2", "T_3", "T_4", "T_5", "T_6"]
 names_B = ["B_1", "B_2", "B_3", "B_4", "B_5", "B_6"]
 names_R = ["R_1", "R_2", "R_3", "R_4", "R_5", "R_6"]
@@ -520,7 +524,7 @@ f3 = Frame(root, bd=5)
 f4 = Frame(root, bd=5)
 f5 = Frame(root, bd=5)
 f6 = Frame(root, bd=5)
-#f7 = Frame(root, bd=5)
+f7 = Frame(root, bd=5)
 f8 = Frame(root, bd=5)
 f9 = Frame(root, bd=5)
 f10 = Frame(root, bd=5, relief=RAISED)
@@ -539,7 +543,7 @@ f3.grid(row=2, column=0, sticky=NW)
 f4.grid(row=3, column=0, sticky=NW)
 f5.grid(row=4, column=0, sticky=NW)
 f6.grid(row=5, column=0, sticky=NW)
-#f7.grid(row=5, column=1, sticky=NW)
+f7.grid(row=7, column=0, sticky=NW)
 f8.grid(row=6, column=1, columnspan=2, sticky=EW)
 f9.grid(row=7, column=1, columnspan=2, sticky=EW)
 f10.grid(row=1, column=1, columnspan=1)
@@ -607,11 +611,11 @@ Chip_entry = Entry(f12, width=10, font=("Ariel 18"), justify="left")
 Chip_entry.pack(side=LEFT, padx=2, pady=5)
 
 #### frame 7
-""" Which_is_connected_label = Label(f7, text='Which side is connected:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
+Which_is_connected_label = Label(f7, text='Type of measurement:', font=("Ariel 20 bold underline")).pack(anchor=W, padx=2, pady=5)
 
-for index in range(len(TBRL)):
+for index in range(len(IT_IV)):
     radiobutton = Radiobutton(f7,
-                              text=TBRL[index], #adds text to radio buttons
+                              text=IT_IV[index], #adds text to radio buttons
                               variable=y, #groups radiobuttons together if they share the same variable
                               value=index, #assigns each radiobutton a different value
                               padx = 2, #adds padding on x-axis
@@ -622,7 +626,7 @@ for index in range(len(TBRL)):
                               width = 10, #sets width of radio buttons
                               #command=order #set command of radiobutton to function
                               )
-    radiobutton.pack(side=LEFT, padx=2, pady=2, expand=TRUE) """
+    radiobutton.pack(side=LEFT, padx=2, pady=2, expand=TRUE)
 
 
 
