@@ -22,7 +22,8 @@ def Start():
     count.set(str(index) + '/' + str(Counter))
     root.update()
 
-    start = time.time()
+    #
+    # start = time.time()
 
     while stop.get() == False:
         root.update()
@@ -60,14 +61,14 @@ def Start():
                 #print(x, y)
                 pyautogui.moveTo(225, 97)
                 pyautogui.click()  
-                print(time.time() - start)
+                #print(time.time() - start)
                 ###Move to plot window###
                 x, y = pyautogui.locateCenterOnScreen('Graph.PNG', confidence=0.75)
                 pyautogui.moveTo(x, y)
                 pyautogui.click() 
                 cnt = 0
                 print(index)
-                print(time.time() - start)
+                #print(time.time() - start)
 
         if triger == 0:
             if cnt == 1:
@@ -79,7 +80,7 @@ def Start():
                     pyautogui.moveTo(225, 97)
                     pyautogui.click() 
 
-                print(time.time() - start)
+                #print(time.time() - start)
 
                 ###Save Measurement###
                 x, y = pyautogui.locateCenterOnScreen('Table.PNG', confidence=0.75)
@@ -236,6 +237,7 @@ root.title('Acceleration Measurement')
 #root.configure(background = 'light blue')
 #root.geometry('700x700')
 root.resizable(False, False)
+
 
 x = IntVar()
 type_off_m = IntVar()
